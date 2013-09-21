@@ -103,15 +103,22 @@ public class P1 {
             }
         }
 
-        //Get a list of all the teams from the DB.
-        public ArrayList<Team> GetAllTeams(){
+        //Get a list of teams from the DB. If city is supplied, then only get those matching the city.
+        public ArrayList<Team> GetTeams(String city){
             ArrayList<Team> returnList = new ArrayList<Team>();
             try {
                 BufferedReader br = new BufferedReader(new FileReader("teams.txt"));
                 String line = br.readLine();
                 Team temp = new Team();
                 while (line != null) {
-                    returnList.add(temp.GetTeamFromString(line));
+                    if((city.equals("")))
+                    {
+                        returnList.add(temp.GetTeamFromString(line));
+                    }
+                    else
+                    if(temp.GetTeamFromString((line)).location.equals(city))
+                        returnList.add(temp.GetTeamFromString(line));
+
                     line = br.readLine();
                 }
                 br.close();
@@ -137,11 +144,11 @@ public class P1 {
         System.out.println();
         System.out.print("> "); 
         
-        Command cmd = null;
+        Command cmd;
         while ((cmd = parser.fetchCommand()) != null) {
             
             boolean result=false;
-            
+            String error = "";
             if (cmd.getCommand().equals("help")) {
                 result = doHelp();
 
@@ -154,23 +161,38 @@ public class P1 {
 
 	   	} else if (cmd.getCommand().equals("print_teams"))
             {
+                try{
                 //Get the list of Teams
-                Team temp = new Team();
-                ArrayList<Team> teams = temp.GetAllTeams();
-                System.out.println("Printing List of Teams: " );
-
-                if(teams.size() > 1)
+                    result = PrintTeams();
+                }
+                catch (Exception ex)
                 {
-                    for(int i = 1; i< teams.size(); i++)
-                    {
-                        System.out.println(teams.get(i).team_ID + ", " + teams.get(i).location + ", " + teams.get(i).name + ", " + teams.get(i).league);
-                    }
+                    result=false;
+                    error = ex.getMessage();
                 }
 
 
 		} else if (cmd.getCommand().equals("coaches_by_name")) {
 
 		} else if (cmd.getCommand().equals("teams_by_city")) {
+                try{
+                    String[] parameters = cmd.getParameters();
+                    if(parameters.length != 1)
+                    {
+                        result = false;
+                        error = "Invalid Number of parameters. Expected 1.";
+                    }
+                    else
+                    {
+                        result = TeamsByCity(parameters[0]);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    result=false;
+                    error = ex.getMessage();
+                }
+
 
 		} else if (cmd.getCommand().equals("load_coaches")) {
 
@@ -184,19 +206,59 @@ public class P1 {
 		} else if (cmd.getCommand().equals("")) {
 		} else {
 			System.out.println("Invalid Command, try again!");
-           	} 
-            
-	    if (result) {
-                // ...
-            }
+           	}
+
+            if (!result) System.out.println(error);
+            else error = "";
 
             System.out.print("> "); 
         }        
     }
-    
+
+    //Method to print all Teams
+    private boolean PrintTeams() {
+        Team temp = new Team();
+        ArrayList<Team> teams = temp.GetTeams("");
+
+        //Print the top line
+        System.out.println("Printing List of Teams: " );
+
+        if(teams.size() > 1)
+        {
+            //Print each Team
+            for(int i = 1; i< teams.size(); i++)
+            {
+                System.out.println("\t" + teams.get(i).team_ID + ", " + teams.get(i).location + ", " + teams.get(i).name + ", " + teams.get(i).league);
+            }
+
+        }
+        return true;
+    }
+
+    //Method which Prints out the teams by a given city parameter
+    private boolean TeamsByCity(String parameter) {
+        Team temp = new Team();
+        ArrayList<Team> teams = temp.GetTeams(parameter.replace('+', ' '));
+
+        //Print the Top Line
+        System.out.println("Printing List of Teams matching City \"" + parameter.replace('+', ' ') + "\":");
+
+        if(teams.size() > 1)
+        {
+            //Print each Team
+            for(int i = 0; i< teams.size(); i++)
+            {
+                System.out.println("\t" + teams.get(i).team_ID + ", " + teams.get(i).location + ", " + teams.get(i).name + ", " + teams.get(i).league);
+            }
+
+        }
+        return true;
+    }
+
+    //Method that displays help text
     private boolean doHelp() {
         System.out.println("add_coach ID SEASON FIRST_NAME LAST_NAME SEASON_WIN "); 
-	System.out.println("          EASON_LOSS PLAYOFF_WIN PLAYOFF_LOSS TEAM - add new coach data");
+	    System.out.println("          SEASON_LOSS PLAYOFF_WIN PLAYOFF_LOSS TEAM - add new coach data");
         System.out.println("add_team ID LOCATION NAME LEAGUE - add a new team");
         System.out.println("print_coaches - print a listing of all coaches");
         System.out.println("print_teams - print a listing of all teams");
