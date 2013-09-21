@@ -92,4 +92,3 @@ WA1,Washington,Bullets,N
 WAC,Washington,Caps,A
 WAS,Washington,Wizards,N
 WAT,Waterloo,Hawks,N
-WSC,Washington,Capitols,N
