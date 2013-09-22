@@ -1,6 +1,8 @@
 package com.company;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class P1 {
@@ -38,39 +40,18 @@ public class P1 {
                 }
             }
 
-            //A few rules here:
-            //  May contain one space
-            //  Needs to be Capital or Lower case letter
-            boolean spaceUsed = false;
-            boolean needToBreak = false;
-            for (int i = 0; i < this.location.length(); i++) {
-                if (this.location.charAt(i) == 32) {
-                    if (!spaceUsed)
-                        spaceUsed = true;
-                    else {
-                        errorHasOccurred = true;
-                        ErrorString = ErrorString.concat("\n Location may contain only one space.");
-                        needToBreak = true;
-                    }
-                } else {
-                    //If not between A-Z or between a-z, it's not valid
-                    if (!((this.location.charAt(i) >= 65 && this.location.charAt(i) <= 90) || (this.location.charAt(i) >= 97 && this.location.charAt(i) <= 122))) {
-                        errorHasOccurred = true;
-                        ErrorString = ErrorString.concat("\n Location may contain upper or lower case letters or one space.");
-                        needToBreak = true;
-                    }
-                }
-
-                if (needToBreak)
-                    break;
-            }//End For
+            //Validating location. Counting spaces.
+            if (this.location.indexOf(' ') != this.location.lastIndexOf(' ')) {
+                errorHasOccurred = true;
+                ErrorString = ErrorString.concat("\n Location may contain only one space.");
+            }
 
             //If error has occurred, return the string. Else, return an empty string.
             return errorHasOccurred ? ErrorString : "";
         }//End IsValid Method
 
         //This method will parse the string for commas, and then Create a team Object based upon the comma separated values
-        public Team GetTeamFromString(String teamString) {
+        public Team GetTeamFromFileString(String teamString) {
             try {
                 //This will be the array of strings we populate to our new object.
                 String[] StringArray = teamString.split(",");
@@ -102,25 +83,18 @@ public class P1 {
         public ArrayList<Team> GetTeams(String city) {
             ArrayList<Team> returnList = new ArrayList<Team>();
             try {
-                BufferedReader br = new BufferedReader(new FileReader("teams.txt"));
 
-                //This is the first line in the table. It names the columns.
-                //noinspection UnusedAssignment
-                String line = br.readLine();
-
-                line = br.readLine();
-
-                Team temp = new Team();
-                while (line != null) {
-                    if ((city.equals(""))) {
-                        returnList.add(temp.GetTeamFromString(line));
-                    } else if (temp.GetTeamFromString((line)).location.equals(city))
-                        returnList.add(temp.GetTeamFromString(line));
-
-                    line = br.readLine();
+                if (city.equals("")) {
+                    returnList = teamDatabase;
+                } else {
+                    for (Team team : teamDatabase) {
+                        if (team.location.equals(city))
+                            returnList.add(team);
+                    }
                 }
-                br.close();
+
                 return returnList;
+
             } catch (Exception e) {
                 return null;
             }
@@ -135,8 +109,6 @@ public class P1 {
         public String coach_ID;
         //int: 4 digits
         public int season;
-        //Int: Positive, 1 digit
-        public int yr_order;
         //String: no space
         public String first_name;
         //String: may have one space
@@ -153,39 +125,165 @@ public class P1 {
         public String team;
 
         public String IsCoachValid() {
-            return "";
+
+            //Validation Variables
+            boolean errorHasOccurred = false;
+            String ErrorString = "The Following Errors Occurred: ";
+            //This is the number of digits in the string. must be 2
+            int numericCount = 0;
+            //This is the number of letters in the string. Can be 0-6
+            int alphaCount = 0;
+            //This tells the loop to break immediately on error
+            boolean needToBreak = false;
+            //End Validation Variables
+
+            //Validating Coach Id
+            for (int i = 0; i < this.coach_ID.length(); i++) {
+                char characterToValidate = this.coach_ID.charAt(i);
+
+                //This is a number
+                if ((characterToValidate >= 48 && characterToValidate <= 57)) {
+                    if (numericCount >= 2) {
+                        errorHasOccurred = true;
+                        needToBreak = true;
+                        ErrorString = ErrorString.concat("\n Coach Id must have 2 Digits. ");
+                    }
+                    numericCount++;
+                }
+                //Capital Letter
+                else if (characterToValidate >= 65 && characterToValidate <= 90) {
+                    if (alphaCount >= 7) {
+                        errorHasOccurred = true;
+                        needToBreak = true;
+                        ErrorString = ErrorString.concat("\n Coach Id must have less than 7 Capital Letters. ");
+                    }
+                    alphaCount++;
+                }
+                //Not a valid character
+                else {
+                    errorHasOccurred = true;
+                    needToBreak = true;
+                    ErrorString = ErrorString.concat("\n \"" + characterToValidate + "\" is not a valid character. ");
+                }
+
+                //Break out of the loop since there's no need to continue
+                if (needToBreak)
+                    break;
+            }
+
+            //If we don't have two digits, throw error.
+            if (numericCount < 2) {
+                errorHasOccurred = true;
+                ErrorString = ErrorString.concat("\n Coach Id must have 2 Digits. ");
+            }
+
+            //Validating season
+            if (season < 1000 || season > 9999) {
+                errorHasOccurred = true;
+                ErrorString = ErrorString.concat("\n Season must be a four digit positive integer. ");
+            }
+
+            //Validating FirstName
+            for (int i = 1; i < first_name.length(); i++) {
+                char charToValidate = first_name.charAt(i);
+
+                if (!((charToValidate >= 65 && charToValidate <= 90) || (charToValidate >= 97 && charToValidate <= 122))) {
+                    errorHasOccurred = true;
+                    ErrorString = ErrorString.concat("\n \"" + charToValidate + "\" is not a valid character. ");
+                    break;
+                }
+            }
+
+            //Validating LastName. Just counting number of spaces
+            if (this.last_name.indexOf(' ') != this.last_name.lastIndexOf(' ')) {
+                errorHasOccurred = true;
+                ErrorString = ErrorString.concat("\n Last Name may contain only one space.");
+            }
+
+            //Validating Season Wins
+            if (this.season_win < 0) {
+                errorHasOccurred = true;
+                ErrorString = ErrorString.concat("\n Season Wins must be a positive integer.");
+            }
+
+            //Validating Season Losses
+            if (this.season_loss < 0) {
+                errorHasOccurred = true;
+                ErrorString = ErrorString.concat("\n Season Losses must be a positive integer.");
+            }
+
+            //Validating Playoff Wins
+            if (this.playoff_win < 0) {
+                errorHasOccurred = true;
+                ErrorString = ErrorString.concat("\n Playoff Wins must be a positive integer.");
+            }
+
+            //Validating Playoff Losses
+            if (this.playoff_loss < 0) {
+                errorHasOccurred = true;
+                ErrorString = ErrorString.concat("\n Playoff Losses must be a positive integer.");
+            }
+
+            //Validating TeamId
+            //If the TeamId is not capital letters or numbers, it isn't valid
+            for (int i = 0; i < this.team.length(); i++) {
+                //If not between A-Z or between 0-9, its not valid
+                if (!((this.team.charAt(i) >= 48 && this.team.charAt(i) <= 57) || (this.team.charAt(i) >= 65 && this.team.charAt(i) <= 90))) {
+                    errorHasOccurred = true;
+                    ErrorString = ErrorString.concat("\n Team must consist of Capital letters or digits.");
+                    break;
+                }
+            }
+            //Ok, here we need to make sure that there is a team that exists with the id given
+            //Note: May not need this, commenting out for right now
+            /*boolean teamExists = false;
+            for(Team team : teamDatabase)
+            {
+                if(team.team_ID.equals(this.team))
+                {
+                    teamExists = true;
+                    break;
+                }
+            }
+            if(!teamExists)
+            {
+                errorHasOccurred = true;
+                ErrorString = ErrorString.concat("\n Team with Id \"" + this.team +"\" not found in Database.");
+            } */
+
+            return errorHasOccurred ? ErrorString : "";
         }
 
         //Method to create a coach object from a provided string array
         public Coach CreateCoachFromStringArray(String[] stringArray) throws Exception {
             //Sanity check. I need ten values, no more no less.
-            if (stringArray.length != 10)
-                throw new Exception("The Expected Number of values was 10 but found " + stringArray.length);
+            if (stringArray.length != 9)
+                throw new Exception("The Expected Number of values was 9 but found " + stringArray.length);
 
             Coach returnCoach = new Coach();
 
             //Populate the Coach Object
             returnCoach.coach_ID = stringArray[0];
             returnCoach.season = Integer.parseInt(stringArray[1]);
-            returnCoach.yr_order = Integer.parseInt(stringArray[2]);
-            returnCoach.first_name = stringArray[3];
-            returnCoach.last_name = stringArray[4];
-            returnCoach.season_win = Integer.parseInt((stringArray[5]));
-            returnCoach.season_loss = Integer.parseInt((stringArray[6]));
-            returnCoach.playoff_win = Integer.parseInt((stringArray[7]));
-            returnCoach.playoff_loss = Integer.parseInt((stringArray[8]));
-            returnCoach.team = stringArray[9];
+            returnCoach.first_name = stringArray[2];
+            returnCoach.last_name = stringArray[3];
+            returnCoach.season_win = Integer.parseInt((stringArray[4]));
+            returnCoach.season_loss = Integer.parseInt((stringArray[5]));
+            returnCoach.playoff_win = Integer.parseInt((stringArray[6]));
+            returnCoach.playoff_loss = Integer.parseInt((stringArray[7]));
+            returnCoach.team = stringArray[8];
 
             return returnCoach;
         }
 
         //This method will parse the string for commas, and then Create a Coach Object based upon the comma separated values
-        public Coach GetCoachFromString(String coachString) {
+        public Coach GetCoachFromFileString(String coachString) {
             try {
                 //This will be the array of strings we populate to our new object.
                 String[] StringArray = coachString.split(",");
-                return CreateCoachFromStringArray(StringArray);
-
+                //Need to modify that array to remove the yr_order field
+                String[] modifiedArray = new String[]{StringArray[0], StringArray[1], StringArray[3], StringArray[4], StringArray[5], StringArray[6], StringArray[7], StringArray[8], StringArray[9]};
+                return CreateCoachFromStringArray(modifiedArray);
 
             } catch (Exception e) {
                 return null;
@@ -196,24 +294,15 @@ public class P1 {
         public ArrayList<Coach> GetCoaches(String lastName) {
             ArrayList<Coach> returnList = new ArrayList<Coach>();
             try {
-                BufferedReader br = new BufferedReader(new FileReader("coaches_season.txt"));
-
-                //This is the first line in the table. It names the columns.
-                //noinspection UnusedAssignment
-                String line = br.readLine();
-
-                line = br.readLine();
-
-                Coach temp = new Coach();
-                while (line != null) {
-                    if ((lastName.equals(""))) {
-                        returnList.add(temp.GetCoachFromString(line));
-                    } else if (temp.GetCoachFromString((line)).last_name.equals(lastName))
-                        returnList.add(temp.GetCoachFromString(line));
-
-                    line = br.readLine();
+                if (lastName.equals("")) {
+                    returnList = coachDatabase;
+                } else {
+                    for (Coach coach : coachDatabase) {
+                        if (coach.last_name.equals(lastName))
+                            returnList.add(coach);
+                    }
                 }
-                br.close();
+
                 return returnList;
             } catch (Exception e) {
                 return null;
@@ -221,10 +310,13 @@ public class P1 {
         }
     }
 
-	/* Define data structures for holding the data here */
+    //These are the in-memory databases to store the records
+    public ArrayList<Team> teamDatabase;
+    public ArrayList<Coach> coachDatabase;
 
     public P1() {
-
+        teamDatabase = new ArrayList<Team>();
+        coachDatabase = new ArrayList<Coach>();
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -249,9 +341,9 @@ public class P1 {
                     String[] parameters = cmd.getParameters();
 
                     //Need four parameters to Add a Coach
-                    if (parameters.length != 10) {
+                    if (parameters.length != 9) {
                         result = false;
-                        error = "Invalid Number of parameters. Expected 10.";
+                        error = "Invalid Number of parameters. Expected 9.";
                     } else {
                         //Before we pass the parameters to the creation function, replace any instances of + with a space
                         parameters[3] = parameters[3].replace("+", " ");
@@ -349,11 +441,103 @@ public class P1 {
                     error = ex.getMessage();
                 }
             } else if (cmd.getCommand().equals("load_coaches")) {
+                try {
+                    ArrayList<Coach> AddList = new ArrayList<Coach>();
+                    if (cmd.getParameters().length != 1) {
+                        result = false;
+                        error = "Expected 1 parameter, found" + cmd.getParameters().length;
+                    } else {
+                        BufferedReader br = new BufferedReader(new FileReader(cmd.getParameters()[0]));
+                        //This is the first line in the table. It names the columns.
+                        //noinspection UnusedAssignment
+                        String line = br.readLine();
+                        line = br.readLine();
+                        Coach temp = new Coach();
+                        while (line != null) {
+                            AddList.add(temp.GetCoachFromFileString(line));
+                            line = br.readLine();
+                        }
+                        br.close();
+                    }
 
+                    //Now that we have a list of coaches to add, need to validate them. If they are good, add them. If not, add to the error list and continue.
+                    int i = 1;
+                    for (Coach coach : AddList) {
+                        String errors = coach.IsCoachValid();
+                        if (errors.equals("")) {
+                            AddCoach(coach);
+                        } else {
+                            error = error + "\nError Adding Coach " + i + ". " + errors;
+                            result = false;
+                        }
+                        i++;
+                    }
+                    System.out.println("\nFinished Loading Coaches.");
+                } catch (Exception e) {
+                    error = e.getMessage();
+                    result = false;
+                }
             } else if (cmd.getCommand().equals("load_teams")) {
+                try {
+                    ArrayList<Team> AddList = new ArrayList<Team>();
+                    if (cmd.getParameters().length != 1) {
+                        result = false;
+                        error = "Expected 1 parameter, found" + cmd.getParameters().length;
+                    } else {
+                        BufferedReader br = new BufferedReader(new FileReader(cmd.getParameters()[0]));
+                        //This is the first line in the table. It names the columns.
+                        //noinspection UnusedAssignment
+                        String line = br.readLine();
+                        line = br.readLine();
+                        Team temp = new Team();
+                        while (line != null) {
+                            AddList.add(temp.GetTeamFromFileString(line));
+                            line = br.readLine();
+                        }
+                        br.close();
+                    }
 
+                    //Now that we have a list of teams to add, need to validate them. If they are good, add them. If not, add to the error list and continue.
+                    int i = 1;
+                    for (Team team : AddList) {
+                        String errors = team.IsTeamValid();
+                        if (errors.equals("")) {
+                            AddTeam(team);
+                        } else {
+                            error = error + "\nError Adding Team " + i + ". " + errors;
+                            result = false;
+                        }
+                        i++;
+                    }
+                    System.out.println("\nFinished Loading Team.");
+                } catch (Exception e) {
+                    error = e.getMessage();
+                    result = false;
+                }
             } else if (cmd.getCommand().equals("best_coach")) {
+                try {
+                    if (cmd.getParameters().length != 1) {
+                        result = false;
+                        error = "Expected 1 parameter, found" + cmd.getParameters().length;
+                    } else {
+                        int mostWins = 0;
+                        Coach winningCoach = new Coach();
 
+                        for (Coach coach : coachDatabase) {
+                            int coachWins = (coach.season_win - coach.season_loss) + (coach.playoff_win - coach.playoff_loss);
+                            //If the season matches the one given
+                            if (coach.season == Integer.parseInt(cmd.getParameters()[0]) && coachWins > mostWins) {
+                                mostWins = coachWins;
+                                winningCoach = coach;
+                            }
+                        }
+
+                        System.out.println("Best Coach was " + winningCoach.first_name + " " + winningCoach.last_name);
+                    }
+                } catch (Exception ex) {
+                    result = false;
+                    error = ex.getMessage();
+                }
             } else if (cmd.getCommand().equals("exit")) {
                 System.out.println("Leaving the database, goodbye!");
                 break;
@@ -370,32 +554,13 @@ public class P1 {
 
     //Method to append a team to the teams.txt file
     private void AddTeam(Team teamToAdd) throws IOException {
-        BufferedWriter output;
-        output = new BufferedWriter(new FileWriter("teams.txt", true));
-        output.newLine();
-        output.append(teamToAdd.team_ID).append(",")
-                .append(teamToAdd.location).append(",")
-                .append(teamToAdd.name).append(",")
-                .append(teamToAdd.league);
-        output.close();
+        teamDatabase.add(teamToAdd);
     }
 
     //Method to append a coach to the coaches_season.txt file
     @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
     private void AddCoach(Coach coachToAdd) throws IOException {
-        BufferedWriter output;
-        output = new BufferedWriter(new FileWriter("coaches_season.txt", true));
-        output.newLine();
-        output.append(coachToAdd.coach_ID).append(",")
-                .append(coachToAdd.season + "").append(",")
-                .append(coachToAdd.first_name).append(",")
-                .append(coachToAdd.last_name).append(",")
-                .append(coachToAdd.season_win + "").append(",")
-                .append(coachToAdd.season_loss + "").append(",")
-                .append(coachToAdd.playoff_win + "").append(",")
-                .append(coachToAdd.playoff_loss + "").append(",")
-                .append(coachToAdd.team);
-        output.close();
+        coachDatabase.add(coachToAdd);
     }
 
     //Method to print all Teams
@@ -406,7 +571,7 @@ public class P1 {
         //Print the top line
         System.out.println("Printing List of Teams: ");
 
-        if (teams.size() > 1) {
+        if (teams.size() >= 1) {
             PrintListOfTeams(teams);
         }
     }
@@ -429,7 +594,7 @@ public class P1 {
         //Print the top line
         System.out.println("Printing List of Coaches: ");
 
-        if (coaches.size() > 1) {
+        if (coaches.size() >= 1) {
             PrintListOfCoaches(coaches);
 
         }
@@ -442,7 +607,6 @@ public class P1 {
             System.out.println
                     ("\t" + coach.coach_ID + ", "
                             + coach.season + ", "
-                            + coach.yr_order + ", "
                             + coach.first_name + ", "
                             + coach.last_name + ", "
                             + coach.season_win + ", "
