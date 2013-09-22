@@ -82,6 +82,7 @@ public class P1 {
             }
         }
 
+        //Method to create a Team object from a provided string array
         public Team CreateTeamFromStringArray(String[] stringArray) throws Exception {
             //Sanity check. I need four values, no more no less.
             if (stringArray.length != 4)
@@ -89,7 +90,7 @@ public class P1 {
 
             Team returnTeam = new Team();
 
-            //Populate the Team Object, remove the last comma
+            //Populate the Team Object
             returnTeam.team_ID = stringArray[0];
             returnTeam.location = stringArray[1];
             returnTeam.name = stringArray[2];
@@ -102,7 +103,13 @@ public class P1 {
             ArrayList<Team> returnList = new ArrayList<Team>();
             try {
                 BufferedReader br = new BufferedReader(new FileReader("teams.txt"));
+
+                //This is the first line in the table. It names the columns.
+                //noinspection UnusedAssignment
                 String line = br.readLine();
+
+                line = br.readLine();
+
                 Team temp = new Team();
                 while (line != null) {
                     if ((city.equals(""))) {
@@ -121,12 +128,106 @@ public class P1 {
 
     }//End Team Class
 
+    //This object represents the Coach tuple in the Database. This class contains properties and methods
+    //associated with Coaches
+    public class Coach {
+        //String: less than 7 cap letters and 2 digits
+        public String coach_ID;
+        //int: 4 digits
+        public int season;
+        //Int: Positive, 1 digit
+        public int yr_order;
+        //String: no space
+        public String first_name;
+        //String: may have one space
+        public String last_name;
+        //int: greater than 0
+        public int season_win;
+        //int: greater than 0
+        public int season_loss;
+        //int: greater than 0
+        public int playoff_win;
+        //int: greater than 0
+        public int playoff_loss;
+        //String: Capital Letters or digits.
+        public String team;
+
+        public String IsCoachValid() {
+            return "";
+        }
+
+        //Method to create a coach object from a provided string array
+        public Coach CreateCoachFromStringArray(String[] stringArray) throws Exception {
+            //Sanity check. I need ten values, no more no less.
+            if (stringArray.length != 10)
+                throw new Exception("The Expected Number of values was 10 but found " + stringArray.length);
+
+            Coach returnCoach = new Coach();
+
+            //Populate the Coach Object
+            returnCoach.coach_ID = stringArray[0];
+            returnCoach.season = Integer.parseInt(stringArray[1]);
+            returnCoach.yr_order = Integer.parseInt(stringArray[2]);
+            returnCoach.first_name = stringArray[3];
+            returnCoach.last_name = stringArray[4];
+            returnCoach.season_win = Integer.parseInt((stringArray[5]));
+            returnCoach.season_loss = Integer.parseInt((stringArray[6]));
+            returnCoach.playoff_win = Integer.parseInt((stringArray[7]));
+            returnCoach.playoff_loss = Integer.parseInt((stringArray[8]));
+            returnCoach.team = stringArray[9];
+
+            return returnCoach;
+        }
+
+        //This method will parse the string for commas, and then Create a Coach Object based upon the comma separated values
+        public Coach GetCoachFromString(String coachString) {
+            try {
+                //This will be the array of strings we populate to our new object.
+                String[] StringArray = coachString.split(",");
+                return CreateCoachFromStringArray(StringArray);
+
+
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        //Get a list of coaches from the DB. If last name is supplied, then only get those matching the last name.
+        public ArrayList<Coach> GetCoaches(String lastName) {
+            ArrayList<Coach> returnList = new ArrayList<Coach>();
+            try {
+                BufferedReader br = new BufferedReader(new FileReader("coaches_season.txt"));
+
+                //This is the first line in the table. It names the columns.
+                //noinspection UnusedAssignment
+                String line = br.readLine();
+
+                line = br.readLine();
+
+                Coach temp = new Coach();
+                while (line != null) {
+                    if ((lastName.equals(""))) {
+                        returnList.add(temp.GetCoachFromString(line));
+                    } else if (temp.GetCoachFromString((line)).last_name.equals(lastName))
+                        returnList.add(temp.GetCoachFromString(line));
+
+                    line = br.readLine();
+                }
+                br.close();
+                return returnList;
+            } catch (Exception e) {
+                return null;
+            }
+        }
+    }
+
 	/* Define data structures for holding the data here */
 
     public P1() {
 
     }
 
+    @SuppressWarnings("ConstantConditions")
     public void run() {
         CommandParser parser = new CommandParser();
         System.out.println("The mini-DB of NBA coaches and teams");
@@ -144,7 +245,36 @@ public class P1 {
 
 		/* You need to implement all the following commands */
             } else if (cmd.getCommand().equals("add_coach")) {
+                try {
+                    String[] parameters = cmd.getParameters();
 
+                    //Need four parameters to Add a Coach
+                    if (parameters.length != 10) {
+                        result = false;
+                        error = "Invalid Number of parameters. Expected 10.";
+                    } else {
+                        //Before we pass the parameters to the creation function, replace any instances of + with a space
+                        parameters[3] = parameters[3].replace("+", " ");
+
+                        Coach temp = new Coach();
+                        Coach coachToAdd = temp.CreateCoachFromStringArray(parameters);
+
+                        String errorMessage = coachToAdd.IsCoachValid();
+
+                        //Make sure the team is valid. If not, throw an error.
+                        if (!errorMessage.equals("")) {
+                            result = false;
+                            error = errorMessage;
+                        } else {
+                            //Write to the file
+                            AddCoach(coachToAdd);
+                            System.out.println("Coach Added Successfully.");
+                        }
+                    }
+                } catch (Exception e) {
+                    result = false;
+                    error = e.getMessage();
+                }
             } else if (cmd.getCommand().equals("add_team")) {
                 try {
                     String[] parameters = cmd.getParameters();
@@ -177,7 +307,13 @@ public class P1 {
                     error = e.getMessage();
                 }
             } else if (cmd.getCommand().equals("print_coaches")) {
-
+                try {
+                    //Print the list of Coaches
+                    PrintCoaches();
+                } catch (Exception ex) {
+                    result = false;
+                    error = ex.getMessage();
+                }
             } else if (cmd.getCommand().equals("print_teams")) {
                 try {
                     //Print the list of Teams
@@ -186,10 +322,19 @@ public class P1 {
                     result = false;
                     error = ex.getMessage();
                 }
-
-
             } else if (cmd.getCommand().equals("coaches_by_name")) {
-
+                try {
+                    String[] parameters = cmd.getParameters();
+                    if (parameters.length != 1) {
+                        result = false;
+                        error = "Invalid Number of parameters. Expected 1.";
+                    } else {
+                        CoachesByLastName(parameters[0]);
+                    }
+                } catch (Exception ex) {
+                    result = false;
+                    error = ex.getMessage();
+                }
             } else if (cmd.getCommand().equals("teams_by_city")) {
                 try {
                     String[] parameters = cmd.getParameters();
@@ -203,8 +348,6 @@ public class P1 {
                     result = false;
                     error = ex.getMessage();
                 }
-
-
             } else if (cmd.getCommand().equals("load_coaches")) {
 
             } else if (cmd.getCommand().equals("load_teams")) {
@@ -215,6 +358,7 @@ public class P1 {
                 System.out.println("Leaving the database, goodbye!");
                 break;
             } else if (cmd.getCommand().equals("")) {
+                result = true;
             } else {
                 System.out.println("Invalid Command, try again!");
             }
@@ -229,7 +373,28 @@ public class P1 {
         BufferedWriter output;
         output = new BufferedWriter(new FileWriter("teams.txt", true));
         output.newLine();
-        output.append(teamToAdd.team_ID).append(",").append(teamToAdd.location).append(",").append(teamToAdd.name).append(",").append(teamToAdd.league);
+        output.append(teamToAdd.team_ID).append(",")
+                .append(teamToAdd.location).append(",")
+                .append(teamToAdd.name).append(",")
+                .append(teamToAdd.league);
+        output.close();
+    }
+
+    //Method to append a coach to the coaches_season.txt file
+    @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
+    private void AddCoach(Coach coachToAdd) throws IOException {
+        BufferedWriter output;
+        output = new BufferedWriter(new FileWriter("coaches_season.txt", true));
+        output.newLine();
+        output.append(coachToAdd.coach_ID).append(",")
+                .append(coachToAdd.season + "").append(",")
+                .append(coachToAdd.first_name).append(",")
+                .append(coachToAdd.last_name).append(",")
+                .append(coachToAdd.season_win + "").append(",")
+                .append(coachToAdd.season_loss + "").append(",")
+                .append(coachToAdd.playoff_win + "").append(",")
+                .append(coachToAdd.playoff_loss + "").append(",")
+                .append(coachToAdd.team);
         output.close();
     }
 
@@ -242,13 +407,51 @@ public class P1 {
         System.out.println("Printing List of Teams: ");
 
         if (teams.size() > 1) {
-            //Print each Team
-            for (int i = 1; i < teams.size(); i++) {
-                System.out.println("\t" + teams.get(i).team_ID + ", " + teams.get(i).location + ", " + teams.get(i).name + ", " + teams.get(i).league);
-            }
+            PrintListOfTeams(teams);
+        }
+    }
+
+    private void PrintListOfTeams(ArrayList<Team> teams) {
+        //Print each Team
+        for (Team team : teams) {
+            System.out.println("\t" + team.team_ID + ", "
+                    + team.location + ", "
+                    + team.name + ", "
+                    + team.league);
+        }
+    }
+
+    //Method to print all Coaches
+    private void PrintCoaches() {
+        Coach temp = new Coach();
+        ArrayList<Coach> coaches = temp.GetCoaches("");
+
+        //Print the top line
+        System.out.println("Printing List of Coaches: ");
+
+        if (coaches.size() > 1) {
+            PrintListOfCoaches(coaches);
 
         }
+    }
 
+    //Common method to print out a list of coaches.
+    private void PrintListOfCoaches(ArrayList<Coach> coaches) {
+        //Print each Coach
+        for (Coach coach : coaches) {
+            System.out.println
+                    ("\t" + coach.coach_ID + ", "
+                            + coach.season + ", "
+                            + coach.yr_order + ", "
+                            + coach.first_name + ", "
+                            + coach.last_name + ", "
+                            + coach.season_win + ", "
+                            + coach.season_loss + ", "
+                            + coach.playoff_win + ", "
+                            + coach.playoff_loss + ", "
+                            + coach.team
+                    );
+        }
     }
 
     //Method which Prints out the teams by a given city parameter
@@ -259,16 +462,28 @@ public class P1 {
         //Print the Top Line
         System.out.println("Printing List of Teams matching City \"" + parameter.replace('+', ' ') + "\":");
 
-        if (teams.size() > 1) {
+        if (teams.size() >= 1) {
             //Print each Team
-            for (Team team : teams) {
-                System.out.println("\t" + team.team_ID + ", " + team.location + ", " + team.name + ", " + team.league);
-            }
+            PrintListOfTeams(teams);
+        }
+    }
 
+    //Method which Prints out the coaches by a given lastName parameter
+    private void CoachesByLastName(String parameter) {
+        Coach temp = new Coach();
+        ArrayList<Coach> coaches = temp.GetCoaches(parameter.replace('+', ' '));
+
+        //Print the Top Line
+        System.out.println("Printing List of Coaches matching Last Name \"" + parameter.replace('+', ' ') + "\":");
+
+        if (coaches.size() >= 1) {
+            //Print each Team
+            PrintListOfCoaches(coaches);
         }
     }
 
     //Method that displays help text
+    @SuppressWarnings("SameReturnValue")
     private boolean doHelp() {
         System.out.println("add_coach ID SEASON FIRST_NAME LAST_NAME SEASON_WIN ");
         System.out.println("          SEASON_LOSS PLAYOFF_WIN PLAYOFF_LOSS TEAM - add new coach data");
