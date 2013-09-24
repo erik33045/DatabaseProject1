@@ -1,5 +1,3 @@
-package com.company;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -450,7 +448,7 @@ public class P1 {
                     ArrayList<Coach> AddList = new ArrayList<Coach>();
                     if (cmd.getParameters().length != 1) {
                         result = false;
-                        error = "Expected 1 parameter, found" + cmd.getParameters().length;
+                        error = "Expected 1 parameter, found " + cmd.getParameters().length;
                     } else {
                         BufferedReader br = new BufferedReader(new FileReader(cmd.getParameters()[0]));
                         //This is the first line in the table. It names the columns.
@@ -487,7 +485,7 @@ public class P1 {
                     ArrayList<Team> AddList = new ArrayList<Team>();
                     if (cmd.getParameters().length != 1) {
                         result = false;
-                        error = "Expected 1 parameter, found" + cmd.getParameters().length;
+                        error = "Expected 1 parameter, found " + cmd.getParameters().length;
                     } else {
                         BufferedReader br = new BufferedReader(new FileReader(cmd.getParameters()[0]));
                         //This is the first line in the table. It names the columns.
@@ -523,7 +521,7 @@ public class P1 {
                 try {
                     if (cmd.getParameters().length != 1) {
                         result = false;
-                        error = "Expected 1 parameter, found" + cmd.getParameters().length;
+                        error = "Expected 1 parameter, found " + cmd.getParameters().length;
                     } else {
                         int mostWins = 0;
                         Coach winningCoach = new Coach();

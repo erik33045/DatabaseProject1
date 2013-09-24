@@ -1,5 +1,3 @@
-package com.company;
-
 /**
  * Data container for an individual Command
  *
