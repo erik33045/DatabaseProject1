@@ -7,6 +7,11 @@ import java.util.ArrayList;
 
 public class P1 {
 
+    public static void main(String [ ] args)
+    {
+        new P1().run();
+    }
+
     //This object represents the Team tuple in the Database. This class contains the properties and methods
     //associated with Teams.
     public class Team {
@@ -509,7 +514,7 @@ public class P1 {
                         }
                         i++;
                     }
-                    System.out.println("\nFinished Loading Team.");
+                    System.out.println("\nFinished Loading Teams.");
                 } catch (Exception e) {
                     error = e.getMessage();
                     result = false;
