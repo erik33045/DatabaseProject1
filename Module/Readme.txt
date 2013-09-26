@@ -13,6 +13,8 @@ Some notes about this program:
 
     Although coaches have a team_Id contained in a field, there is no code in the program to check this foreign key at time of add. This is by design, the examples shown had coaches being loaded first. This would not be possible if the foreign key on coaches was enforced.
 
-    Validation is done on all data, regardless of add or loading. This means that improperly formatted data will never be accepted into the database. When loading, if a specific entry fails in the table, loading will continue on. After loading finishes, errors will show for eah object that was failed to be added.
+    Validation is skipped during load as was indicated by the TA. On add, the program will attempt to validate the data to the best of it's ability and throw useful error messages.
 
     Uniqueness is not enforced. This was not given in the spec for the program, so it was not coded in.
+
+    Due to the way the example files were set up (with the column names always as the first line,) the load_teams function will NEVER load the first line. It will start at the second line and start reading. This is by design.
