@@ -1,4 +1,5 @@
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -463,20 +464,18 @@ public class P1 {
                         br.close();
                     }
 
-                    //Now that we have a list of coaches to add, need to validate them. If they are good, add them. If not, add to the error list and continue.
-                    int i = 1;
+                    //According to the TA, we don't need to validate on load, so just add them
                     for (Coach coach : AddList) {
-                        String errors = coach.IsCoachValid();
-                        if (errors.equals("")) {
                             AddCoach(coach);
-                        } else {
-                            error = error + "\nError Adding Coach " + i + ". " + errors;
-                            result = false;
                         }
-                        i++;
-                    }
                     System.out.println("\nFinished Loading Coaches.");
-                } catch (Exception e) {
+                }
+                catch (FileNotFoundException e)
+                {
+                    error = "Cannot find the file specified, please try again.";
+                    result = false;
+                }
+                catch (Exception e) {
                     error = e.getMessage();
                     result = false;
                 }
@@ -500,21 +499,20 @@ public class P1 {
                         br.close();
                     }
 
-                    //Now that we have a list of teams to add, need to validate them. If they are good, add them. If not, add to the error list and continue.
-                    int i = 1;
+                    //According to the TA, we should do no validation on load, so just add them.
                     for (Team team : AddList) {
-                        String errors = team.IsTeamValid();
-                        if (errors.equals("")) {
                             AddTeam(team);
-                        } else {
-                            error = error + "\nError Adding Team " + i + ". " + errors;
-                            result = false;
-                        }
-                        i++;
                     }
                     System.out.println("\nFinished Loading Teams.");
-                } catch (Exception e) {
-                    error = e.getMessage();
+                }
+                    catch (FileNotFoundException e)
+                    {
+                     error = "Cannot find the file specified, please try again.";
+                        result = false;
+                    }
+                    catch (Exception e) {
+                       if(error.equals(""))
+                            error = e.getMessage();
                     result = false;
                 }
             } else if (cmd.getCommand().equals("best_coach")) {
